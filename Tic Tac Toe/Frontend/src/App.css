@@ -1,4 +1,3 @@
-/* Center the whole game container */
 body {
   background-color: #00062f;
 }
@@ -7,7 +6,7 @@ body {
   margin-top: 50px;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Horizontally centers */
+  align-items: center; 
 }
 
 
@@ -31,6 +30,14 @@ body {
   font-size: 16px;
   cursor: pointer;
 }
+.game_mode{
+  font-size: 40px;
+  color: #fcfeff;
+}
+.mode-button{
+  font-size: 20px;
+  cursor: pointer;
+}
 
 
 .start-screen, .game-content {
@@ -38,18 +45,16 @@ body {
   transition: opacity 1s ease-in-out;
 }
 
-/* Fade-out effect */
 .fade-out {
   opacity: 0;
   transition: opacity 1s ease-in-out;
 }
 
-/* Add fade-out for reset */
 .fade-out-reset {
   opacity: 0;
   transition: opacity 1s ease-in-out;
 }
-/* Congratulations overlay */
+
 .congratulations-overlay {
   position: fixed;
   top: 0;
@@ -71,7 +76,6 @@ body {
   animation: scale-up 1s ease-in-out infinite alternate;
 }
 
-/* Scale-up animation */
 @keyframes scale-up {
   from {
     transform: scale(1);
@@ -95,18 +99,16 @@ body {
   font-size: 16px;
   border-radius: 4px;
 }
-/* Styling the game board */
 .board {
   display: grid;
-  grid-template-columns: repeat(3, 100px); /* Creates 3 columns of equal size */
-  grid-template-rows: repeat(3, 100px); /* Creates 3 rows of equal size */
+  grid-template-columns: repeat(3, 100px); 
+  grid-template-rows: repeat(3, 100px); 
   gap: 0px;
   margin-top: 70px;
   margin-bottom: 20px;
   
 }
 
-/* Styling each square (button) */
 .square {
   width: 100px;
   height: 100px;
@@ -116,11 +118,10 @@ body {
   color :#f0f1f7;
   cursor: pointer;
   display: flex;
-  justify-content: center; /* Centers text inside the button */
-  align-items: center; /* Centers text vertically */
+  justify-content: center; 
+  align-items: center; 
 }
 
-/* Styling the reset button */
 .reset-button {
   margin-top: 50px;
   padding: 10px 20px;
