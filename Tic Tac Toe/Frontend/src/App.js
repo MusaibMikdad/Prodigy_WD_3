@@ -7,6 +7,8 @@ const TicTacToe = () => {
   const [winner, setWinner] = useState(null);
   const [isDraw, setIsDraw] = useState(false);
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const [isGameModeSelected, setIsGameModeSelected] = useState(false);
+  const [gameMode, setGameMode] = useState(null);
   const [fadeClass, setFadeClass] = useState('');
   const [showCongratulations, setShowCongratulations] = useState(false);
 
@@ -14,6 +16,15 @@ const TicTacToe = () => {
   const drawSound = new Audio('/fail.mp3');
 
   const startGame = () => {
+    setFadeClass('fade-out');
+    setTimeout(() => {
+      setIsGameModeSelected(true);
+      setFadeClass('');
+    }, 1000);
+  };
+
+  const selectGameMode = (mode) => {
+    setGameMode(mode);
     setFadeClass('fade-out');
     setTimeout(() => {
       setIsGameStarted(true);
@@ -25,6 +36,8 @@ const TicTacToe = () => {
     setFadeClass('fade-out');
     setTimeout(() => {
       setIsGameStarted(false);
+      setIsGameModeSelected(false);
+      setGameMode(null);
       setFadeClass('');
       resetGame();
     }, 1000);
@@ -74,26 +87,25 @@ const TicTacToe = () => {
   };
 
   const triggerConfetti = (isWin) => {
-    setShowCongratulations(true); 
+    setShowCongratulations(true);
     for (let i = 0; i < 100; i++) {
       createConfettiPiece();
     }
 
     if (isWin) {
-      winSound.play(); 
+      winSound.play();
     } else {
-      drawSound.play(); 
+      drawSound.play();
     }
 
-
     setTimeout(() => {
-      setShowCongratulations(false); 
+      setShowCongratulations(false);
     }, 4000);
   };
 
-  const handleMove = (row, col) => {
+  const handlePlayerMove = (row, col) => {
     if (board[row][col] === '' && !winner && !isDraw) {
-      const newBoard = [...board.map(row => [...row])];
+      const newBoard = board.map(row => [...row]);
       newBoard[row][col] = currentPlayer;
       setBoard(newBoard);
 
@@ -104,34 +116,73 @@ const TicTacToe = () => {
       } else if (checkDraw(newBoard)) {
         setIsDraw(true);
         triggerConfetti(false);
+      } else if (gameMode === 'single' && currentPlayer === 'X') {
+        setCurrentPlayer('O');
+        setTimeout(() => handleComputerMove(newBoard), 500);
       } else {
         setCurrentPlayer(currentPlayer === 'X' ? 'O' : 'X');
       }
     }
   };
 
+  const handleComputerMove = (currentBoard) => {
+    if (winner || isDraw) return;
+
+    const emptyCells = [];
+    currentBoard.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+        if (cell === '') emptyCells.push([rowIndex, colIndex]);
+      });
+    });
+
+    if (emptyCells.length > 0) {
+      const [row, col] = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      const newBoard = currentBoard.map(row => [...row]);
+      newBoard[row][col] = 'O';
+      setBoard(newBoard);
+
+      const winner = checkWinner(newBoard);
+      if (winner) {
+        setWinner(winner);
+        triggerConfetti(true);
+      } else if (checkDraw(newBoard)) {
+        setIsDraw(true);
+        triggerConfetti(false);
+      } else {
+        setCurrentPlayer('X');
+      }
+    }
+  };
+
   const resetGame = () => {
-    setFadeClass('fade-out-reset'); 
+    setFadeClass('fade-out-reset');
     setTimeout(() => {
       setBoard([['', '', ''], ['', '', ''], ['', '', '']]);
       setWinner(null);
       setIsDraw(false);
       setCurrentPlayer('X');
-      setFadeClass(''); 
-    }, 1000); 
+      setFadeClass('');
+    }, 1000);
   };
 
   const playAgain = () => {
     resetGame();
-    setIsGameStarted(true); 
+    setIsGameStarted(true);
   };
 
   return (
     <div className="game">
-      {!isGameStarted ? (
+      {!isGameStarted && !isGameModeSelected ? (
         <div className={`start-screen ${fadeClass}`}>
           <h1 className="title">Tic Tac Toe</h1>
           <button onClick={startGame} className="start-button">Start Game</button>
+        </div>
+      ) : !isGameStarted && isGameModeSelected ? (
+        <div className={`game-mode-screen ${fadeClass}`}>
+          <h2 className='game_mode'>Select Game Mode</h2>
+          <button onClick={() => selectGameMode('single')} className="mode-button">Single Player</button>
+          <button onClick={() => selectGameMode('multi')} className="mode-button">Two Player</button>
+          <button onClick={goToMenu} className="menu-button">Menu</button>
         </div>
       ) : (
         <div className={`game-content ${fadeClass}`}>
@@ -143,9 +194,7 @@ const TicTacToe = () => {
           {!winner && !isDraw && (
             <h1 className='playername'>{currentPlayer}'s turn</h1>
           )}
-          
-          
-      
+
           {!winner && !isDraw && (
             <div className="board">
               {board.map((row, rowIndex) => (
@@ -154,7 +203,8 @@ const TicTacToe = () => {
                     <button
                       key={colIndex}
                       className="square"
-                      onClick={() => handleMove(rowIndex, colIndex)}
+                      onClick={() => handlePlayerMove(rowIndex, colIndex)}
+                      disabled={cell !== '' || (gameMode === 'single' && currentPlayer === 'O')}
                     >
                       {cell}
                     </button>
@@ -185,7 +235,7 @@ const TicTacToe = () => {
       {showCongratulations && isDraw && (
         <div className="congratulations-overlay">
           <div className="congratulations-message">
-          😀 It's a Draw! 😀
+            😀 It's a Draw! 😀
           </div>
         </div>
       )}
