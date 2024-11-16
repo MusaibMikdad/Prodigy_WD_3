@@ -14,6 +14,7 @@ const TicTacToe = () => {
 
   const winSound = new Audio('/congo.mp3');
   const drawSound = new Audio('/fail.mp3');
+  const computerWinSound = new Audio('/loss.mp3'); 
 
   const startGame = () => {
     setFadeClass('fade-out');
@@ -38,6 +39,17 @@ const TicTacToe = () => {
       setIsGameStarted(false);
       setIsGameModeSelected(false);
       setGameMode(null);
+      setFadeClass('');
+      resetGame();
+    }, 1000);
+  };
+
+  const goback = () => {
+    setFadeClass('fade-out');
+    setTimeout(() => {
+      setIsGameStarted(false);
+      setIsGameModeSelected(true);
+      setGameMode(false);
       setFadeClass('');
       resetGame();
     }, 1000);
@@ -86,21 +98,25 @@ const TicTacToe = () => {
     });
   };
 
-  const triggerConfetti = (isWin) => {
+  const triggerConfetti = (isWin, winner) => {
     setShowCongratulations(true);
     for (let i = 0; i < 100; i++) {
       createConfettiPiece();
     }
 
     if (isWin) {
-      winSound.play();
+      if (gameMode === 'single' && winner === 'O') {
+        computerWinSound.play(); 
+      } else {
+        winSound.play();
+      }
     } else {
       drawSound.play();
     }
 
     setTimeout(() => {
       setShowCongratulations(false);
-    }, 4000);
+    }, 5000);
   };
 
   const handlePlayerMove = (row, col) => {
@@ -112,7 +128,7 @@ const TicTacToe = () => {
       const winner = checkWinner(newBoard);
       if (winner) {
         setWinner(winner);
-        triggerConfetti(true);
+        triggerConfetti(true, winner);
       } else if (checkDraw(newBoard)) {
         setIsDraw(true);
         triggerConfetti(false);
@@ -125,34 +141,66 @@ const TicTacToe = () => {
     }
   };
 
-  const handleComputerMove = (currentBoard) => {
-    if (winner || isDraw) return;
-
-    const emptyCells = [];
-    currentBoard.forEach((row, rowIndex) => {
-      row.forEach((cell, colIndex) => {
-        if (cell === '') emptyCells.push([rowIndex, colIndex]);
-      });
-    });
-
-    if (emptyCells.length > 0) {
-      const [row, col] = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-      const newBoard = currentBoard.map(row => [...row]);
-      newBoard[row][col] = 'O';
-      setBoard(newBoard);
-
-      const winner = checkWinner(newBoard);
-      if (winner) {
-        setWinner(winner);
-        triggerConfetti(true);
-      } else if (checkDraw(newBoard)) {
-        setIsDraw(true);
-        triggerConfetti(false);
-      } else {
-        setCurrentPlayer('X');
+  const minimax = (board, depth, isMaximizing) => {
+    const winner = checkWinner(board);
+    if (winner) {
+      if (winner === 'O') return 10 - depth; 
+      if (winner === 'X') return depth - 10; 
+      return 0; 
+    }
+  
+    if (checkDraw(board)) return 0; 
+    
+    let bestScore = isMaximizing ? -Infinity : Infinity;
+    let move = null;
+  
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        if (board[row][col] === '') {
+          board[row][col] = isMaximizing ? 'O' : 'X'; 
+          const score = minimax(board, depth + 1, !isMaximizing);
+          board[row][col] = ''; 
+  
+          if (isMaximizing) {
+            if (score > bestScore) {
+              bestScore = score;
+              move = { row, col };
+            }
+          } else {
+            if (score < bestScore) {
+              bestScore = score;
+              move = { row, col };
+            }
+          }
+        }
       }
     }
+  
+    return depth === 0 ? move : bestScore;
   };
+  
+  const handleComputerMove = (currentBoard) => {
+    if (winner || isDraw) return;
+  
+    const bestMove = minimax(currentBoard, 0, true); 
+  
+    const newBoard = currentBoard.map(row => [...row]);
+    newBoard[bestMove.row][bestMove.col] = 'O';
+    setBoard(newBoard);
+  
+    const newWinner = checkWinner(newBoard);
+    if (newWinner) {
+      setWinner(newWinner);
+      triggerConfetti(true, newWinner);
+    } else if (checkDraw(newBoard)) {
+      setIsDraw(true);
+      triggerConfetti(false);
+    } else {
+      setCurrentPlayer('X');
+    }
+  };
+  
+  
 
   const resetGame = () => {
     setFadeClass('fade-out-reset');
@@ -184,13 +232,18 @@ const TicTacToe = () => {
           <button onClick={() => selectGameMode('multi')} className="mode-button">Two Player</button>
           <button onClick={goToMenu} className="menu-button">Menu</button>
         </div>
-      ) : (
+      ):(
         <div className={`game-content ${fadeClass}`}>
           <button onClick={goToMenu} className="menu-button">Menu</button>
+          <button onClick={goback} className="back-button"> Back </button>
           <div className="winner">
-            {winner ? `Match Result: ${winner} wins` : isDraw ? 'Match Result: Draw' : ''}
+            {gameMode === 'multi' && winner ? `Match Result: ${winner} wins` : isDraw ? 'Match Result: Draw' : ''}
           </div>
-          
+          <div className='losser'>
+          {gameMode === 'single' && winner === 'O' && (
+          <h1> Match Result:  Computer wins </h1>
+        )}
+        </div>
           {!winner && !isDraw && (
             <h1 className='playername'>{currentPlayer}'s turn</h1>
           )}
@@ -224,13 +277,16 @@ const TicTacToe = () => {
         </div>
       )}
 
-      {showCongratulations && winner && (
-        <div className="congratulations-overlay">
-          <div className="congratulations-message">
-            🎉 Congratulations! {winner} wins the game! 🎉
-          </div>
-        </div>
-      )}
+{showCongratulations && winner && (
+  <div className="congratulations-overlay">
+    <div className="congratulations-message">
+      {gameMode === 'single' && winner === 'O' 
+        ? ' Better luck next time! 🙂' 
+        : `🎉 Congratulations! ${winner} wins the game! 🎉`}
+    </div>
+  </div>
+)}
+
       
       {showCongratulations && isDraw && (
         <div className="congratulations-overlay">
@@ -239,6 +295,7 @@ const TicTacToe = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };
