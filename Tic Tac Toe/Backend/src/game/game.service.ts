@@ -6,14 +6,12 @@ export class GameService {
   private currentPlayer: string = 'X';
   private winner: string | null = null;
 
-  // Initialize or reset the board
   initializeGame(): void {
     this.board = [['', '', ''], ['', '', ''], ['', '', '']];
     this.currentPlayer = 'X';
     this.winner = null;
   }
 
-  // Place move on the board
   makeMove(row: number, col: number): string[][] {
     if (this.board[row][col] === '' && !this.winner) {
       this.board[row][col] = this.currentPlayer;
@@ -26,18 +24,14 @@ export class GameService {
     return this.board;
   }
 
-  // Check for a winner
   private checkWinner(): boolean {
     const lines = [
-      // Rows
       [this.board[0][0], this.board[0][1], this.board[0][2]],
       [this.board[1][0], this.board[1][1], this.board[1][2]],
       [this.board[2][0], this.board[2][1], this.board[2][2]],
-      // Columns
       [this.board[0][0], this.board[1][0], this.board[2][0]],
       [this.board[0][1], this.board[1][1], this.board[2][1]],
       [this.board[0][2], this.board[1][2], this.board[2][2]],
-      // Diagonals
       [this.board[0][0], this.board[1][1], this.board[2][2]],
       [this.board[0][2], this.board[1][1], this.board[2][0]],
     ];
