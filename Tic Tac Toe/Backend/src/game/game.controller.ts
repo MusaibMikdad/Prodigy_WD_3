@@ -14,10 +14,8 @@ export class GameController {
 async handleMove(@Body() move: { row: number, col: number }) {
   const { row, col } = move;
 
-  // Your logic to apply the move, update the board, and detect the winner
   const updatedBoard = this.gameService.makeMove(row, col);
 
-  // Return the updated game state
   return updatedBoard;
 }
 
