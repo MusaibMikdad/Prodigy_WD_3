@@ -144,8 +144,8 @@ const TicTacToe = () => {
   const minimax = (board, depth, isMaximizing) => {
     const winner = checkWinner(board);
     if (winner) {
-      if (winner === 'O') return 10 - depth; 
-      if (winner === 'X') return depth - 10; 
+      if (winner === 'O') return 6 - depth; 
+      if (winner === 'X') return depth - 6; 
       return 0; 
     }
   
